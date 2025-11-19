@@ -31,19 +31,3 @@ func ReleaseLock(ctx context.Context, key, token string) error {
 	_, err := rediscli.Rds.Eval(ctx, luaScript, []string{key}, token).Result()
 	return err
 }
-
-// 锁续租
-func RefreshLock(ctx context.Context, key, token string, ttl time.Duration) (bool, error) {
-	luaScript := `
-        if redis.call("get", KEYS[1]) == ARGV[1] then
-            return redis.call("pexpire", KEYS[1], ARGV[2])
-        else
-            return 0
-        end
-    `
-	result, err := rediscli.Rds.Eval(ctx, luaScript, []string{key}, token, int64(ttl/time.Millisecond)).Result()
-	if err != nil {
-		return false, err
-	}
-	return result.(int64) == 1, nil
-}
