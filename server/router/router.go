@@ -28,22 +28,22 @@ func SetupRouter() *gin.Engine {
 	channels := origen.Group("/channels")
 	channels.Use(middlewares.Auth())
 	{
-		channels.POST("/create", api.CreateChannel)
+
 		channels.POST("/join", api.JoinChannel)
 		channels.POST("/:channel_id/leave", api.LeaveChannel)
 		channels.GET("/list", api.GetChannels)
 		channels.GET("/:channel_id/history", api.GetHistory)
+		channels.GET("/:channel_id/members", api.GetMembers)
 	}
 
 	channel := origen.Group("/channel")
 	channel.Use(middlewares.Auth())
 	{
+		channel.POST("/create", api.CreateChannel)
 		channel.DELETE("/:channel_id", api.DeleteChannel)
 		channel.DELETE("/:channel_id/member/:user_id", api.RemoveMember)
-		channel.PATCH("/:channel_id", api.ChangeChannelName)
-		channel.GET("/:channel_id/members", api.GetMembers)
 		channel.GET("/invite", api.GetInviteCode)
-
+		channel.PATCH("/:channel_id", api.ChangeChannelName)
 	}
 
 	return r
