@@ -59,7 +59,12 @@ func GetChannelIDsByUser(userID string) ([]string, error) {
 func GetChannelsByIDs(ids []string) ([]models.Channel, error) {
 	var channels []models.Channel
 
-	if err := db.DB.Where("id IN ?", ids).Find(&channels).Error; err != nil {
+	err := db.DB.
+		Where("id IN ?", ids).
+		Where("visible = ?", true).
+		Find(&channels).Error
+
+	if err != nil {
 		return nil, err
 	}
 
