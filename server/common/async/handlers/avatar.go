@@ -37,11 +37,6 @@ func processChangeAvatarTask(p ChangeAvatarPayload) error {
 		return err
 	}
 
-	if err != nil {
-		log.Println("[Task] ChangeAvatar failed:", err)
-		return err
-	}
-
 	return nil
 }
 

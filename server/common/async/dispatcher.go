@@ -53,6 +53,9 @@ func DispatchTask(ctx context.Context, envelope Envelope) error {
 	case "change_avatar":
 		return handlers.HandleChangeAvatar(ctx, envelope.Payload)
 
+	case "chat_message":
+		return handlers.HandleChatMessage(ctx, envelope.Payload)
+
 	default:
 		log.Printf("unknown task type: %s", envelope.TaskType)
 
