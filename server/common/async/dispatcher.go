@@ -59,6 +59,6 @@ func DispatchTask(ctx context.Context, envelope Envelope) error {
 	default:
 		log.Printf("unknown task type: %s", envelope.TaskType)
 
-		return errors.New("Unknown task type")
+		return errors.New("unknown task type")
 	}
 }
