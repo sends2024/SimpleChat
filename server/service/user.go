@@ -24,7 +24,7 @@ func Register(username, password, email string) *response.AppError {
 
 	dao.CreateUser(&models.User{
 		ID:        userID,
-		Name:      username,
+		Username:  username,
 		Password:  hashed,
 		AvatarURL: "",
 		Email:     email,
@@ -50,7 +50,7 @@ func Login(username, password string) (map[string]interface{}, *response.AppErro
 func ChangePassword(OldPassword, NewPassword, userID string) *response.AppError {
 	user := dao.GetUserByID(userID)
 
-	if !utils.CheckPassword(OldPassword, user.Password) {
+	if utils.CheckPassword(OldPassword, user.Password) {
 		return response.NewAppError(http.StatusBadRequest, "Old password is incorrect")
 	}
 	hashed, _ := utils.HashPassword(NewPassword)

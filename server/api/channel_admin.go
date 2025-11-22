@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 
 	"server/common/response"
@@ -24,37 +25,37 @@ func CreateChannel(c *gin.Context) {
 		return
 	}
 	userID := c.GetString("user_id")
-	err := service.CreateChannel(req.ChannelName, userID)
+	data, err := service.CreateChannel(req.ChannelName, userID)
 	if err != nil {
 		response.HandleServiceError(c, err)
 		return
 	}
 
-	response.Success(c, nil)
+	response.Success(c, data)
 }
 
 func DeleteChannel(c *gin.Context) {
-	clannelID := c.Param("clannel_id")
+	channelID := c.Param("channel_id")
 
 	response.Success(c, nil)
 
 	// TODO
 	// 不想再写一个异步了，有那个意思算了
-	service.DeleteChannel(clannelID)
+	service.DeleteChannel(channelID)
 }
 
 func RemoveMember(c *gin.Context) {
-	clannelID := c.Param("clannel_id")
+	channelID := c.Param("channel_id")
 	memberID := c.Param("member_id")
 
-	service.RemoveMember(clannelID, memberID)
+	service.RemoveMember(channelID, memberID)
 	response.Success(c, nil)
 }
 
 func GetInviteCode(c *gin.Context) {
-	clannelID := c.Param("clannel_id")
-
-	data, err := service.GenerateInvite(clannelID)
+	channelID := c.Param("channel_id")
+	fmt.Println(channelID)
+	data, err := service.GenerateInvite(channelID)
 	if err != nil {
 		response.Fail(c, http.StatusInternalServerError, "Failed to get invite_code")
 	}
@@ -68,8 +69,8 @@ func ChangeChannelName(c *gin.Context) {
 		return
 	}
 
-	clannelID := c.Param("clannel_id")
-	service.ChangeChannelName(req.NewName, clannelID)
+	channelID := c.Param("channel_id")
+	service.ChangeChannelName(req.NewName, channelID)
 
 	response.Success(c, nil)
 }

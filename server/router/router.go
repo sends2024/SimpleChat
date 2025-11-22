@@ -41,8 +41,8 @@ func SetupRouter() *gin.Engine {
 	{
 		channel.POST("/create", api.CreateChannel)
 		channel.DELETE("/:channel_id", api.DeleteChannel)
-		channel.DELETE("/:channel_id/member/:user_id", api.RemoveMember)
-		channel.GET("/invite", api.GetInviteCode)
+		channel.DELETE("/:channel_id/member/:member_id", api.RemoveMember)
+		channel.GET("/:channel_id/invite", api.GetInviteCode)
 		channel.PATCH("/:channel_id", api.ChangeChannelName)
 	}
 

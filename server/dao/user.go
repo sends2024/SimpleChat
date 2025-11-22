@@ -19,7 +19,10 @@ func GetUserByUsername(username string) *models.User {
 
 func GetUserByID(id string) *models.User {
 	var user models.User
-	db.DB.First(&user, id)
+	err := db.DB.Where("id = ?", id).First(&user).Error
+	if err != nil {
+		return nil
+	}
 	return &user
 }
 

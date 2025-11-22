@@ -24,40 +24,33 @@ type DeleteChannelPayload struct {
 	ChannelID string `json:"channel_id"`
 }
 
-func CreateChannel(channelName, userID string) *response.AppError {
+func CreateChannel(channelName, userID string) (*ChannelDTO, *response.AppError) {
 	exist := dao.GetChannelByName(channelName)
 	if exist != nil {
-		return response.NewAppError(http.StatusBadRequest, "ChannelName already exists")
+		return nil, response.NewAppError(http.StatusBadRequest, "ChannelName already exists")
 	}
 
 	channelID := utils.NewULID()
+
 	dao.CreateChannel(&models.Channel{
 		ID:        channelID,
 		Name:      channelName,
 		CreatedBy: userID,
 	})
 
-	user := dao.GetUserByID(userID)
-	payload := JoinChannelPayload{
-		Username:    user.ID,
-		AvatarURL:   user.AvatarURL,
+	// 创建者自动加入频道
+	err := dao.AddMember(channelID, userID)
+	if err != nil {
+		return nil, response.NewAppError(http.StatusInternalServerError, "Failed to add owner to channel")
+	}
+
+	dto := &ChannelDTO{
 		ChannelID:   channelID,
 		ChannelName: channelName,
-		IsOwner:     false,
-		UserID:      userID,
+		IsOwner:     true,
 	}
 
-	p, _ := json.Marshal(payload)
-
-	evt := Envelope{
-		TaskType: "JOIN",
-		Payload:  p,
-	}
-
-	b, _ := json.Marshal(evt)
-	rediscli.Rds.Publish(context.Background(), "channel_event", b)
-
-	return nil
+	return dto, nil
 }
 
 func DeleteChannel(channelID string) {

@@ -36,8 +36,8 @@ func AddMember(channelID string, userID string) error {
 	return db.DB.Create(&member).Error
 }
 
-func RemoveMember(classID string, userID string) error {
-	return db.DB.Where("class_id = ? AND user_id = ?", classID, userID).
+func RemoveMember(channelID string, userID string) error {
+	return db.DB.Where("channel_id = ? AND user_id = ?", channelID, userID).
 		Delete(&models.ChannelMember{}).Error
 }
 

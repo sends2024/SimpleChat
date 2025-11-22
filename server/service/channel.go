@@ -78,7 +78,7 @@ func JoinChannel(inviteCode string, userID string) *response.AppError {
 
 	user := dao.GetUserByID(userID)
 	payload := JoinChannelPayload{
-		Username:    user.ID,
+		Username:    user.Username,
 		AvatarURL:   user.AvatarURL,
 		ChannelID:   channel.ID,
 		ChannelName: channel.Name,
@@ -161,7 +161,7 @@ func GetMembers(channelID string) []MemberDTO {
 	for _, u := range users {
 		result = append(result, MemberDTO{
 			UserID:    u.ID,
-			Username:  u.Name,
+			Username:  u.Username,
 			AvatarURL: u.AvatarURL,
 		})
 	}
@@ -182,14 +182,15 @@ func SaveMessage(channelID, userID, message string, sendTime time.Time) error {
 	return nil
 }
 
+const TimeLayoutMS = "2006-01-02T15:04:05.000Z07:00"
+
 func GetHistory(before string, channelID string) HistoryDTO {
 	var msgs []models.Message
 
 	if before == "" {
 		msgs, _ = dao.GetCachedMessages(channelID)
 	} else {
-		t, _ := time.Parse(time.RFC3339, before)
-
+		t, _ := time.Parse(TimeLayoutMS, before)
 		msgs, _ = dao.GetOldMessages(channelID, t)
 	}
 
@@ -204,7 +205,8 @@ func GetHistory(before string, channelID string) HistoryDTO {
 
 	cursor := ""
 	if len(result) > 0 {
-		cursor = result[0].SentAt.Format(time.RFC3339)
+		cursorTime := result[0].SentAt.Add(-1 * time.Millisecond)
+		cursor = cursorTime.UTC().Format(TimeLayoutMS)
 	}
 
 	return HistoryDTO{
