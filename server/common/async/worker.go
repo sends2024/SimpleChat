@@ -104,15 +104,29 @@ func StartWorker(ctx context.Context) {
 	go pollPendingLoop(ctx)
 
 	for {
-		res, err := rediscli.Rds.XReadGroup(ctx, &redis.XReadGroupArgs{
+		select {
+		case <-ctx.Done():
+			log.Println("Worker stopped")
+			return
+		default:
+		}
+
+		wctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+
+		res, err := rediscli.Rds.XReadGroup(wctx, &redis.XReadGroupArgs{
 			Group:    GroupName,
 			Consumer: ConsumerID,
 			Streams:  []string{StreamName, ">"},
-			Count:    1,
-			Block:    0,
+			Count:    10,
+			Block:    5 * time.Second,
 		}).Result()
 
+		cancel()
+
 		if err != nil {
+			if err == context.DeadlineExceeded || err == redis.Nil {
+				continue
+			}
 			log.Println("XReadGroup error:", err)
 			time.Sleep(2 * time.Second)
 			continue
@@ -121,7 +135,6 @@ func StartWorker(ctx context.Context) {
 		for _, stream := range res {
 			for _, msg := range stream.Messages {
 
-				// 解析任务
 				raw, ok := msg.Values["data"].(string)
 				if !ok {
 					log.Println("Invalid msg: missing 'data'")
@@ -134,16 +147,13 @@ func StartWorker(ctx context.Context) {
 					continue
 				}
 
-				// 执行任务
-				err := DispatchTask(context.Background(), envelope)
+				err := DispatchTask(ctx, envelope)
 				if err != nil {
 					log.Printf("Task failed (will retry later): %v", err)
 					continue
 				}
 
-				// ACK
-				ackErr := rediscli.Rds.XAck(context.Background(), StreamName, GroupName, msg.ID).Err()
-				if ackErr != nil {
+				if ackErr := rediscli.Rds.XAck(ctx, StreamName, GroupName, msg.ID).Err(); ackErr != nil {
 					log.Println("XACK failed:", ackErr)
 				}
 			}
